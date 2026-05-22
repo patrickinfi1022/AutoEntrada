@@ -1,0 +1,76 @@
+Documento de Requerimientos y Especificaciones de Software (SRS)
+
+Proyecto: Sistema Web de Control de Acceso Vehicular con IA
+Stack Tecnológico: Python (Backend), MySQL (Base de Datos), REST API (Swagger/OpenAPI), React con TypeScript (Frontend)
+1. Descripción General del Sistema
+
+El sistema automatiza el control de acceso vehicular mediante una cámara web en vivo colocada en la entrada de un recinto. Utiliza Inteligencia Artificial (YOLOv8 y un motor de OCR) para detectar e identificar vehículos, extraer los caracteres de sus placas, y clasificar su marca y color. La información se contrasta en tiempo real con una base de datos en MySQL para autorizar el ingreso mediante una señal digital, permitiendo la gestión integral del entorno a través de tres roles de usuario en una plataforma web.
+2. Requerimientos Funcionales (RF)
+2.1 Módulo de Inteligencia Artificial y Procesamiento (Pipeline de IA)
+
+    RF-01 (Streaming en Vivo): El sistema debe capturar el flujo de video continuo y en tiempo real proveniente de una cámara web de entrada.
+
+    RF-02 (Detección de Objetos): El backend procesará el video usando YOLOv8 para localizar el vehículo y aislar la Región de Interés (ROI) de la placa.
+
+    RF-03 (Clasificación de Atributos): El sistema identificará el color del vehículo y la marca (a través del logo o diseño frontal).
+
+    RF-04 (Lectura de Placa - OCR): El sistema extraerá los caracteres alfanuméricos de la placa a partir del recorte generado por YOLO.
+
+    RF-05 (Captura de Evidencia): El sistema guardará una fotografía del vehículo en el momento exacto de la detección.
+
+2.2 Lógica de Control de Acceso y Persistencia
+
+    RF-06 (Registro de Accesos): Cada intento de detección debe persistirse en la base de datos con los siguientes campos: Placa, Fecha, Hora, Ruta de la Foto, Color detectado y Marca detectada.
+
+    RF-07 (Validación de Usuario): El sistema contrastará la placa detectada con la tabla de usuarios registrados:
+
+        Si la placa existe y está "Activa": Envía un trigger exitoso (output digital para apertura de puerta).
+
+        Si la placa no existe o está "Inactiva": Muestra una alerta visual en la interfaz de Seguridad de "Vehículo No Registrado".
+
+    RF-08 (Registro Express en Alerta): Ante un vehículo no registrado, la interfaz de Seguridad permitirá al operador registrar al usuario en ese instante o cancelar la acción.
+
+2.3 Gestión de Roles y Permisos (Interfaz Web)
+
+La aplicación web desarrollada en React + TypeScript se dividirá en tres niveles de acceso:
+A. Rol: Administrador
+
+    RF-09 (CRUD de Usuarios): Control total (Crear, Leer, Actualizar, Borrar) sobre la tabla de usuarios.
+
+    RF-10 (Historial Global): Visualización y filtrado de la totalidad del histórico de accesos desde el inicio de los tiempos.
+
+B. Rol: Seguridad
+
+    RF-11 (Estación de Monitoreo): Panel exclusivo para la computadora de la entrada conectada a la cámara web.
+
+    RF-12 (Escritura de Accesos): Capacidad de registrar nuevos usuarios/visitantes al vuelo cuando salte una alerta de placa no identificada. Tiene estrictamente prohibido editar o borrar registros existentes.
+
+    RF-13 (Historial Limitado): Solo podrá visualizar el historial de accesos de los últimos 7 días.
+
+C. Rol: Usuario (Residente)
+
+    RF-14 (Gestión de Visitantes Temporales): Puede pre-registrar hasta un máximo de 2 vehículos de visitantes simultáneos.
+
+    RF-15 (Pases Temporales): El usuario asignará una vigencia estricta al visitante: 12 horas, 24 horas o 7 días. Puede revocar/borrar el acceso del visitante antes de tiempo si lo desea.
+
+    RF-16 (Historial Personal): Solo puede ver el historial de accesos de su propio vehículo y de los visitantes que él mismo registró, limitado a la última semana.
+
+3. Requerimientos No Funcionales (RNF)
+
+    RNF-01 (Arquitectura de Software): Desacoplamiento total mediante una Arquitectura Cliente-Servidor. El Backend expondrá servicios mediante una API REST documentada con Swagger.
+
+    RNF-02 (Rendimiento del OCR): El procesamiento conjunto de YOLO y OCR debe tomar un tiempo menor a 1.5 segundos para evitar retrasos en el flujo vehicular de la entrada.
+
+    RNF-03 (Seguridad): Autenticación basada en tokens (JWT) para asegurar que cada rol interactúe únicamente con las APIs de Swagger que le corresponden.
+
+    RNF-04 (Escalabilidad de Despliegue): El backend se estructurará para correr en un servidor (inicialmente local en tu PC de desarrollo) y el frontend estará preparado para producción con compilación optimizada para subirse a un dominio web.
+
+4. Diseño Preliminar de la Base de Datos (MySQL)
+
+Para soportar las reglas de negocio anteriores, requerimos un esquema con mínimo tres tablas core:
+
+    usuarios: id, nombre, placa (Única), tipo_usuario (Residente/Visitante), estatus (Activo/Inactivo), creado_por_user_id (para saber qué usuario registró a qué visitante), fecha_expiracion (null para residentes, timestamp para visitantes).
+
+    roles_cuenta: id, username, password_hash, rol (Admin, Seguridad, Usuario), usuario_id (Relación opcional con la tabla usuarios).
+
+    registro_accesos: id, placa, fecha, hora, foto_path, color, marca, acceso_concedido (Booleano).
