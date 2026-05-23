@@ -1,0 +1,26 @@
+# --- Entornos Virtuales de Python ---
+backend/venv/
+backend/env/
+ENV/
+env/
+venv/
+
+# --- Archivos de caché de Python ---
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# --- Datos y Multimedia del proyecto (Fotos de evidencia) ---
+backend/media/*
+!backend/media/.gitkeep
+
+# --- IDEs y Editores de código ---
+.vscode/
+.idea/
+*.swp
+
+# --- Sistema Operativo ---
+.DS_Store
+Thumbs.db

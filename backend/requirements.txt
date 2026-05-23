@@ -1,0 +1,17 @@
+# --- Inteligencia Artificial y Computación Visual ---
+ultralytics>=8.1.0
+easyocr>=1.7.1
+opencv-python-headless>=4.9.0.80
+
+# --- API Backend y Documentación Swagger ---
+fastapi>=0.110.0
+uvicorn>=0.28.0
+
+# --- Base de Datos y ORM ---
+sqlalchemy>=2.0.28
+pymysql>=1.1.0
+cryptography>=42.0.5
+
+# --- Utilidades ---
+python-multipart>=0.0.9
+pydantic>=2.6.4
