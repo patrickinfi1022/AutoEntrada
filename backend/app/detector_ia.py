@@ -149,6 +149,28 @@ def iniciar_camara_en_vivo():
     cap.release()
     cv2.destroyAllWindows()
     print("=== Stream de video cerrado ===")
+    
+lector_ocr = easyocr.Reader(['es'], gpu=False)
+
+# Simulación de la "Tabla de Usuarios" en memoria (Mientras conectamos MySQL)
+USUARIOS_SIMULADOS = [
+    {"nombre": "Patrick Kelliher", "placa": "ABC1234", "tipo": "Residente", "estatus": "Activo"},
+    {"nombre": "Ana Ríos", "placa": "XYZ9876", "tipo": "Residente", "estatus": "Inactivo"},
+    {"nombre": "Visitante Carlos", "placa": "TMP5544", "tipo": "Visitante", "estatus": "Activo"}
+]
+
+def validar_acceso_placa(placa_texto):
+    """
+    Busca la placa en nuestra lista simulada y decide si abre la puerta.
+    """
+    for usuario in USUARIOS_SIMULADOS:
+        if usuario["placa"] == placa_texto:
+            if usuario["estatus"] == "Activo":
+                return {"concedido": True, "mensaje": f"Acceso Concedido a {usuario['nombre']} ({usuario['tipo']})"}
+            else:
+                return {"concedido": False, "mensaje": f"Usuario {usuario['nombre']} se encuentra INACTIVO."}
+                
+    return {"concedido": False, "mensaje": "Vehículo NO REGISTRADO. Alerta enviada a Seguridad."}
 
 if __name__ == "__main__":
     iniciar_camara_en_vivo()
