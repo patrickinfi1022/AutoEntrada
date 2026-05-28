@@ -1,111 +1,204 @@
 import React, { useState } from 'react';
-import { Car, Lock, User } from 'lucide-react';
+import { ShieldCheck, User, Lock, Settings, Building2, Home, AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function Login() {
-  // Estados para capturar lo que escribe el usuario
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  const fillRole = (role: string) => {
+    setUsername(role);
+    setPassword('demo1234');
+    setError('');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    const u = username.trim().toLowerCase();
 
-    // Limpiamos espacios
-    const userTrimmed = username.trim().toLowerCase();
-
-    if (!userTrimmed || !password) {
+    if (!u || !password) {
       setError('Por favor, completa todos los campos.');
       return;
     }
 
-    // SIMULACIÓN DE AUTENTICACIÓN POR ROLES (Mientras conectamos la API)
-    // Evaluamos el nombre de usuario para determinar su rol y destino
-    if (userTrimmed === 'admin') {
+    if (u === 'admin') {
       localStorage.setItem('user_rol', 'Admin');
       localStorage.setItem('username', username);
       window.location.href = '/admin';
-    } else if (userTrimmed === 'caseta' || userTrimmed === 'seguridad') {
+    } else if (u === 'caseta' || u === 'seguridad') {
       localStorage.setItem('user_rol', 'Seguridad');
       localStorage.setItem('username', username);
       window.location.href = '/seguridad';
-    } else if (userTrimmed === 'residente' || userTrimmed === 'patrick') {
+    } else if (u === 'residente' || u === 'patrick') {
       localStorage.setItem('user_rol', 'Usuario');
       localStorage.setItem('username', username);
       window.location.href = '/residente';
     } else {
-      // Si pone cualquier otra cosa, simulamos un error de credenciales
-      setError('Usuario o contraseña incorrectos. Prueba con: admin, seguridad o residente.');
+      setError('Usuario o contraseña incorrectos.');
     }
   };
 
+  const roles = [
+    { label: 'Admin',    value: 'admin',     icon: <Settings size={20} /> },
+    { label: 'Caseta',   value: 'seguridad',  icon: <Building2 size={20} /> },
+    { label: 'Residente',value: 'residente',  icon: <Home size={20} /> },
+  ];
+
   return (
-    <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc', fontFamily: 'sans-serif' }}>
-      <div style={{ padding: '40px', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', width: '350px' }}>
-        
-        {/* Encabezado */}
-        <div style={{ textAlign: 'center', marginBottom: '25px' }}>
-          <Car size={44} color="#2563eb" style={{ margin: '0 auto 10px' }} />
-          <h2 style={{ margin: '0 0 5px', color: '#0f172a' }}>AutoEntrada</h2>
-          <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>Control de Acceso Vehicular Inteligente</p>
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', backgroundColor: '#f1efe8', padding: '2rem',
+      fontFamily: 'sans-serif',
+    }}>
+      <div style={{
+        background: '#fff', border: '0.5px solid rgba(0,0,0,0.12)',
+        borderRadius: '16px', padding: '2.5rem 2rem', width: '100%', maxWidth: '360px',
+      }}>
+
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <div style={{
+            width: 60, height: 60, borderRadius: '50%', background: '#042C53',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem',
+          }}>
+            <ShieldCheck size={26} color="#85B7EB" />
+          </div>
+          <span style={{
+            display: 'inline-block', fontSize: 11, padding: '3px 10px',
+            borderRadius: 99, background: '#E6F1FB', color: '#185FA5',
+            fontWeight: 500, marginBottom: '0.5rem',
+          }}>
+            Control de acceso
+          </span>
+          <h1 style={{ fontSize: 22, fontWeight: 500, margin: '0 0 4px', color: '#353e49' }}>GuardIA</h1>
+          <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
+            Sistema de acceso vehicular inteligente
+          </p>
         </div>
 
-        {/* Mensaje de Error */}
+        {/* Error */}
         {error && (
-          <div style={{ backgroundColor: '#fee2e2', color: '#b91c1c', padding: '10px', borderRadius: '6px', fontSize: '13px', marginBottom: '15px', border: '1px solid #fca5a5' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: '#FCEBEB', border: '1px solid #F09595',
+            borderRadius: 8, padding: '10px 12px',
+            fontSize: 13, color: '#A32D2D', marginBottom: '1rem',
+          }}>
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
             {error}
           </div>
         )}
 
-        {/* Formulario de Login */}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          
-          {/* Input de Usuario */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#334155' }}>Nombre de Usuario</label>
-            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '10px', backgroundColor: '#fff' }}>
-              <User size={18} color="#64748b" style={{ marginRight: '8px' }} />
-              <input 
-                type="text" 
-                placeholder="Ej: admin, caseta, residente" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                style={{ border: 'none', outline: 'none', width: '100%', fontSize: '14px' }}
-              />
-            </div>
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+          {/* Usuario */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label style={{ fontSize: 13, fontWeight: 500, color: '#475569' }}>Usuario</label>
+            <InputField
+              type="text"
+              placeholder="admin, seguridad, residente"
+              value={username}
+              onChange={setUsername}
+              icon={<User size={17} />}
+            />
           </div>
 
-          {/* Input de Contraseña */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '13px', fontWeight: 'bold', color: '#334155' }}>Contraseña</label>
-            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '10px', backgroundColor: '#fff' }}>
-              <Lock size={18} color="#64748b" style={{ marginRight: '8px' }} />
-              <input 
-                type="password" 
-                placeholder="••••••••" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ border: 'none', outline: 'none', width: '100%', fontSize: '14px' }}
-              />
-            </div>
+          {/* Contraseña */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label style={{ fontSize: 13, fontWeight: 500, color: '#475569' }}>Contraseña</label>
+            <InputField
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={setPassword}
+              icon={<Lock size={17} />}
+            />
           </div>
 
-          {/* Botón de Ingreso */}
-          <button 
-            type="submit" 
-            style={{ backgroundColor: '#2563eb', color: '#fff', border: 'none', padding: '12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', marginTop: '10px', transition: 'background 0.2s' }}
-          >
-            Iniciar Sesión
+          <button type="submit" style={{
+            marginTop: '0.5rem', height: 46, background: '#185FA5', color: '#E6F1FB',
+            border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}>
+            <ArrowRight size={16} />
+            Iniciar sesión
           </button>
         </form>
 
-        {/* Nota informativa de desarrollo */}
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: '#94a3b8' }}>
-          <p style={{ margin: 0 }}>Cuentas demo (usa cualquier clave):</p>
-          <p style={{ margin: '4px 0 0' }}><code>admin</code> | <code>seguridad</code> | <code>residente</code></p>
+        {/* Divider */}
+        <hr style={{ border: 'none', borderTop: '0.5px solid rgba(0,0,0,0.1)', margin: '1.5rem 0 1rem' }} />
+
+        <p style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', margin: '0 0 10px' }}>
+          Acceso rápido demo
+        </p>
+
+        {/* Role chips */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          {roles.map(r => (
+            <button
+              key={r.value}
+              type="button"
+              onClick={() => fillRole(r.value)}
+              style={{
+                background: '#f8fafc', border: '0.5px solid rgba(0,0,0,0.1)',
+                borderRadius: 8, padding: '10px 6px', textAlign: 'center',
+                cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: 4,
+              }}
+            >
+              <span style={{ color: '#64748b' }}>{r.icon}</span>
+              <span style={{ fontSize: 11, color: '#64748b' }}>{r.label}</span>
+            </button>
+          ))}
         </div>
 
+        <p style={{ textAlign: 'center', fontSize: 11, color: '#414549', marginTop: '1rem' }}>
+          Usa <code style={{ background: '#f1f5f9', padding: '1px 5px', borderRadius: 4 }}>admin</code>,{' '}
+          <code style={{ background: '#f1f5f9', padding: '1px 5px', borderRadius: 4 }}>seguridad</code> o{' '}
+          <code style={{ background: '#f1f5f9', padding: '1px 5px', borderRadius: 4 }}>residente</code> con cualquier clave
+        </p>
       </div>
+    </div>
+  );
+}
+
+// Subcomponente para inputs con ícono y estado de focus
+function InputField({ type, placeholder, value, onChange, icon }: {
+  type: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  icon: React.ReactNode;
+}) {
+  const [focused, setFocused] = useState(false);
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 10,
+      height: 46, padding: '0 12px',
+      background: focused ? '#fff' : '#f8fafc',
+      border: `1.5px solid ${focused ? '#378ADD' : 'rgba(0,0,0,0.15)'}`,
+      borderRadius: 8,
+      boxShadow: focused ? '0 0 0 3px rgba(55,138,221,0.13)' : 'none',
+      transition: 'border-color 0.15s, box-shadow 0.15s, background 0.15s',
+    }}>
+      <span style={{ color: focused ? '#378ADD' : '#94a3b8', flexShrink: 0, transition: 'color 0.15s' }}>
+        {icon}
+      </span>
+      <input
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          border: 'none', outline: 'none', background: 'transparent',
+          width: '100%', fontSize: 14, color: '#0f172a',
+        }}
+      />
     </div>
   );
 }

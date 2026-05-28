@@ -1,9 +1,8 @@
 import React, { useRef, useCallback, useEffect, useState } from "react";
 import Webcam from "react-webcam";
 import axios from "axios";
-import { monitoreoService } from "../../services/api";
+import { ShieldCheck, ShieldX, ScanLine, Camera } from "lucide-react";
 
-// Definición de interfaces para el estado
 interface AlertaAcceso {
   placa: string;
   mensaje: string;
@@ -14,116 +13,175 @@ const DashboardSeguridad = () => {
   const webcamRef = useRef<Webcam>(null);
   const [ultimaAlerta, setUltimaAlerta] = useState<AlertaAcceso | null>(null);
   const [cargando, setCargando] = useState(false);
+  const [pulso, setPulso] = useState(false);
 
-  // Función para capturar el frame y enviarlo al proceso de IA
   const capturarYDetectar = useCallback(async () => {
     if (cargando) return;
-
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
       try {
-        // Convertir el screenshot (base64) a un Blob para enviarlo como archivo
+        setCargando(true);
+        setPulso(true);
+        setTimeout(() => setPulso(false), 600);
+
         const response = await fetch(imageSrc);
         const blob = await response.blob();
-        
         const formData = new FormData();
         formData.append('file', blob, 'frame.jpg');
 
-        // Petición al nuevo endpoint de detección en tiempo real
         const res = await axios.post('http://localhost:8000/api/monitoreo/detectar-realtime', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
 
         const data = res.data;
-
-        if (data.placa && data.placa !== "No detectada") {
-          if (data.acceso_concedido) {
-            setUltimaAlerta({
-              placa: data.placa,
-              mensaje: `Acceso Concedido: ${data.usuario.nombre}`,
-              tipo: 'success'
-            });
-          } else {
-            setUltimaAlerta({
-              placa: data.placa,
-              mensaje: data.usuario === "No Registrado" ? "Vehículo No Registrado" : "Usuario Inactivo",
-              tipo: 'error'
-            });
+        console.log(data)
+        if (data.acceso_concedido) {
+          setUltimaAlerta({ placa: data.placa, mensaje: `Acceso concedido — ${data.usuario.nombre}`, tipo: 'success' });
+        }
+        else {
+          if (data.detalles_registro) {
+            setUltimaAlerta({ placa: data.placa, mensaje: data.usuario === "No Registrado" ? "Vehículo no registrado" : "Usuario inactivo", tipo: 'error' });
           }
+          else setUltimaAlerta(null)
         }
       } catch (error) {
         console.error("Error en la detección de IA:", error);
+      } finally {
+        setCargando(false);
       }
     }
   }, [webcamRef, cargando]);
 
-  // Configuración del intervalo de detección (cada 3 segundos)
   useEffect(() => {
-    const intervalo = setInterval(() => {
-      capturarYDetectar();
-    }, 3000);
+    const intervalo = setInterval(() => { capturarYDetectar(); }, 3000);
     return () => clearInterval(intervalo);
   }, [capturarYDetectar]);
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Panel de Monitoreo de Accesos</h1>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Sección de la Cámara */}
-        <div className="bg-white p-4 rounded-xl shadow-lg flex flex-col items-center">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-            Cámara en Vivo - Detección YOLOv8
-          </h2>
-          
-          <div className="relative border-4 border-gray-900 rounded-lg overflow-hidden bg-black w-full max-w-md">
+    <div style={{ minHeight: '100vh', background: '#f1efe8', padding: '2rem', fontFamily: 'sans-serif' }}>
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '2rem' }}>
+        <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#042C53', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ShieldCheck size={20} color="#85B7EB" />
+        </div>
+        <div>
+          <h1 style={{ fontSize: 20, fontWeight: 500, margin: 0, color: '#0f172a', textAlign: "start" }}>Panel de monitoreo</h1>
+          <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>Detección vehicular en tiempo real · YOLOv8</p>
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 99, padding: '5px 12px' }}>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#639922', display: 'inline-block', animation: 'blink 1.4s infinite' }} />
+          <span style={{ fontSize: 12, color: '#3B6D11', fontWeight: 500 }}>En vivo</span>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+
+        {/* Cámara */}
+        <div style={{ background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 16, padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Camera size={16} color="#64748b" />
+            <span style={{ fontSize: 13, fontWeight: 500, color: '#334155' }}>Cámara en vivo</span>
+          </div>
+
+          <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', background: '#0f172a', aspectRatio: '4/3' }}>
             <Webcam
               audio={false}
               ref={webcamRef}
               screenshotFormat="image/jpeg"
-              className="w-full h-auto"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               videoConstraints={{ facingMode: "environment" }}
             />
-            {/* Animación de escaneo visual */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 opacity-50 shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-scan"></div>
+            {/* Línea de escaneo */}
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+              background: '#378ADD', opacity: 0.7,
+              animation: 'scan 2s linear infinite',
+            }} />
+            {/* Esquinas de overlay */}
+            <div style={{ position: 'absolute', top: 12, left: 12, width: 20, height: 20, borderTop: '2px solid #378ADD', borderLeft: '2px solid #378ADD', borderRadius: '3px 0 0 0' }} />
+            <div style={{ position: 'absolute', top: 12, right: 12, width: 20, height: 20, borderTop: '2px solid #378ADD', borderRight: '2px solid #378ADD', borderRadius: '0 3px 0 0' }} />
+            <div style={{ position: 'absolute', bottom: 12, left: 12, width: 20, height: 20, borderBottom: '2px solid #378ADD', borderLeft: '2px solid #378ADD', borderRadius: '0 0 0 3px' }} />
+            <div style={{ position: 'absolute', bottom: 12, right: 12, width: 20, height: 20, borderBottom: '2px solid #378ADD', borderRight: '2px solid #378ADD', borderRadius: '0 0 3px 0' }} />
+            {/* Badge de análisis */}
+            <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', background: 'rgba(4,44,83,0.75)', borderRadius: 99, padding: '4px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <ScanLine size={13} color="#85B7EB" />
+              <span style={{ fontSize: 11, color: '#B5D4F4', fontWeight: 500 }}>Analizando cada 3s</span>
+            </div>
           </div>
-          
-          <p className="mt-4 text-sm text-gray-500 italic">
-            El sistema está analizando frames automáticamente cada 3 segundos.
-          </p>
         </div>
 
-        {/* Sección de Alertas y Resultados */}
-        <div className="space-y-6">
+        {/* Panel derecho */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+          {/* Última detección */}
           {ultimaAlerta ? (
-            <div className={`p-6 rounded-xl border-l-8 shadow-md transition-all ${
-              ultimaAlerta.tipo === 'success' ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'
-            }`}>
-              <h3 className="text-xl font-bold mb-2">Última Detección</h3>
-              <div className="flex justify-between items-center">
+            <div style={{
+              background: '#fff',
+              border: `0.5px solid ${ultimaAlerta.tipo === 'success' ? '#C0DD97' : '#F7C1C1'}`,
+              borderLeft: `4px solid ${ultimaAlerta.tipo === 'success' ? '#639922' : '#E24B4A'}`,
+              borderRadius: 16,
+              padding: '1.5rem',
+            }}>
+              <p style={{ fontSize: 12, fontWeight: 500, color: '#64748b', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Última detección</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                 <div>
-                  <p className="text-3xl font-mono font-black text-gray-800">{ultimaAlerta.placa}</p>
-                  <p className={`text-lg font-semibold ${
-                    ultimaAlerta.tipo === 'success' ? 'text-green-700' : 'text-red-700'
-                  }`}>
+                  <p style={{ fontSize: 32, fontWeight: 500, fontFamily: 'monospace', color: '#0f172a', margin: '0 0 6px', letterSpacing: 3 }}>
+                    {ultimaAlerta.placa}
+                  </p>
+                  <p style={{ fontSize: 14, fontWeight: 500, margin: 0, color: ultimaAlerta.tipo === 'success' ? '#3B6D11' : '#A32D2D' }}>
                     {ultimaAlerta.mensaje}
                   </p>
                 </div>
-                <div className={`text-5xl ${ultimaAlerta.tipo === 'success' ? 'text-green-500' : 'text-red-500'}`}>
-                  {ultimaAlerta.tipo === 'success' ? '✅' : '🚫'}
+                <div style={{
+                  width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
+                  background: ultimaAlerta.tipo === 'success' ? '#EAF3DE' : '#FCEBEB',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {ultimaAlerta.tipo === 'success'
+                    ? <ShieldCheck size={26} color="#3B6D11" />
+                    : <ShieldX size={26} color="#A32D2D" />
+                  }
                 </div>
               </div>
             </div>
           ) : (
-            <div className="p-10 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center text-gray-400">
-              <p className="text-lg">Esperando detección de placas...</p>
+            <div style={{
+              background: '#fff', border: '1.5px dashed rgba(0,0,0,0.1)',
+              borderRadius: 16, padding: '2.5rem 1.5rem',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}>
+              <ScanLine size={28} color="#cbd5e1" />
+              <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>Esperando detección de placas...</p>
             </div>
           )}
 
-          {/* Aquí puedes incluir la tabla de historial que ya tenías */}
+          {/* Stats rápidas */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            {[
+              { label: 'Intervalo', value: '3s', icon: '⏱' },
+              { label: 'Modelo', value: 'YOLOv8', icon: '🤖' },
+            ].map(s => (
+              <div key={s.label} style={{ background: '#fff', border: '0.5px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '1rem' }}>
+                <p style={{ fontSize: 12, color: '#94a3b8', margin: '0 0 4px' }}>{s.label}</p>
+                <p style={{ fontSize: 16, fontWeight: 500, color: '#0f172a', margin: 0 }}>{s.value}</p>
+              </div>
+            ))}
+          </div>
+
         </div>
       </div>
+
+      <style>{`
+        @keyframes scan {
+          0% { top: 0; }
+          100% { top: 100%; }
+        }
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+      `}</style>
     </div>
   );
 };
