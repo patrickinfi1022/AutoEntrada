@@ -1,0 +1,19 @@
+api:
+  listen: ":1984"
+
+rtsp:
+  listen: ""
+
+webrtc:
+  listen: ":8555"
+  candidates:
+    - "${GO2RTC_ICE_CANDIDATE}"
+  ice_servers:
+    - urls:
+        - "stun:stun.cloudflare.com:3478"
+        - "stun:stun.l.google.com:19302"
+
+streams: {}
+
+log:
+  level: info

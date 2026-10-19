@@ -1,0 +1,41 @@
+name: autoentrada-edge
+
+services:
+  go2rtc:
+    image: alexxit/go2rtc:1.9.13
+    container_name: autoentrada-edge-media
+    restart: unless-stopped
+    init: true
+    environment:
+      TZ: ${TZ:-America/Mexico_City}
+      GO2RTC_ICE_CANDIDATE: ${GO2RTC_ICE_CANDIDATE:?Set the reachable ICE address or hostname}
+    volumes:
+      - ./edge/go2rtc.yaml:/config/go2rtc.yaml:ro
+    # Bind the management API only to the gateway's private VPN address.
+    ports:
+      - "${EDGE_WIREGUARD_IP:?Set the private VPN address}:1984:1984/tcp"
+      # Direct WebRTC path. If the site cannot accept these ports, deploy TURN and configure ICE.
+      - "${EDGE_MEDIA_BIND_IP:?Set the specific interface address for WebRTC media}:8555:8555/tcp"
+      - "${EDGE_MEDIA_BIND_IP:?Set the specific interface address for WebRTC media}:8555:8555/udp"
+    networks: [edge-control]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
+  edge-agent:
+    build: ./edge
+    container_name: autoentrada-edge-agent
+    restart: unless-stopped
+    environment:
+      EDGE_API_BASE_URL: ${EDGE_API_BASE_URL:?Set the SaaS API HTTPS base URL}
+      EDGE_TOKEN: ${EDGE_TOKEN:?Set the one-time enrolled gateway token}
+      EDGE_GO2RTC_API_URL: http://go2rtc:1984
+      EDGE_HEARTBEAT_SECONDS: ${EDGE_HEARTBEAT_SECONDS:-30}
+    depends_on: [go2rtc]
+    networks: [edge-control]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
+networks:
+  edge-control:
+    name: autoentrada-edge-control
+    driver: bridge

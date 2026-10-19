@@ -1,6 +1,7 @@
 # app/routers/monitoreo.py
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
 from ..database import get_db
 from ..models import models # Importación correcta
 from datetime import datetime
@@ -8,6 +9,15 @@ from fastapi import File, UploadFile
 from ..utils import procesar_deteccion_placa # Importamos la función nueva
 
 router = APIRouter(prefix="/api/monitoreo", tags=["Monitoreo IA"])
+
+@router.get("/historial")
+def obtener_historial(limit: int = 200, db: Session = Depends(get_db)):
+    limite = min(max(limit, 1), 500)
+    return db.query(models.RegistroAcceso).order_by(
+        desc(models.RegistroAcceso.fecha),
+        desc(models.RegistroAcceso.hora),
+        desc(models.RegistroAcceso.id)
+    ).limit(limite).all()
 
 @router.post("/simular-deteccion")
 def simular_deteccion(

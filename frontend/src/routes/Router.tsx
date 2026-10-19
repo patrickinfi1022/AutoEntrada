@@ -1,6 +1,7 @@
 // src/routes/Router.tsx
 import { createBrowserRouter } from 'react-router-dom';
 import Login from '../views/Login';
+import Register from '../views/Register';
 import DashboardAdmin from '../views/admin/DashboardAdmin';
 import DashboardSeguridad from '../views/seguridad/DashboardSeguridad';
 import DashboardUsuario from '../views/usuario/DashboardUsuario';
@@ -9,6 +10,10 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <Login />,
+  },
+  {
+    path: '/registro',
+    element: <Register />,
   },
   {
     path: '/admin',

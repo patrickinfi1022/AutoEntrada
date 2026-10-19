@@ -1,0 +1,35 @@
+name: autoentrada-cloud
+
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env.cloud
+    expose: ["8000"]
+    networks: [app-private, site-vpn]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: [/tmp]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /
+    restart: unless-stopped
+    ports: ["127.0.0.1:8080:8080"]
+    depends_on: [backend]
+    networks: [app-private]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: [/var/cache/nginx, /var/run]
+
+networks:
+  app-private:
+    driver: bridge
+  # Attach the cloud host to a routed private VPN that reaches the edge WireGuard peers.
+  site-vpn:
+    external: true
+    name: autoentrada-site-vpn

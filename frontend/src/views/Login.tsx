@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from 'lucide-react';
 import './Login.css';
 
@@ -117,6 +118,7 @@ export default function Login() {
           </div>
 
           <p className="security-note"><LockKeyhole size={14} /> Tus datos están protegidos y cifrados.</p>
+          <p className="signup-prompt">¿Aún no tienes cuenta? <Link to="/registro">Crear una cuenta</Link></p>
           <p className="mobile-footer">¿Necesitas ayuda? <a href="mailto:soporte@guardia.mx">Contacta a soporte</a></p>
         </section>
       </section>

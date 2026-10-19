@@ -1,0 +1,25 @@
+api:
+  listen: ":1984"
+
+rtsp:
+  # This application only consumes DVR streams; it does not need a public RTSP server.
+  listen: ""
+
+webrtc:
+  listen: ":8555"
+  # Set this to the public IP/DNS address that browsers can reach.
+  candidates:
+    - "${GO2RTC_PUBLIC_IP}"
+  ice_servers:
+    - urls:
+        - "stun:stun.cloudflare.com:3478"
+        - "stun:stun.l.google.com:19302"
+
+# Streams are created at runtime by FastAPI through the private go2rtc API.
+# Example only (never put production credentials in this file):
+# streams:
+#   demo_dvr: rtsp://user:password@192.168.1.50:554/Streaming/Channels/101#transport=tcp#media=video
+streams: {}
+
+log:
+  level: info

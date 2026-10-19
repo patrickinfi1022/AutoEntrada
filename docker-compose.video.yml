@@ -1,0 +1,30 @@
+name: autoentrada-video
+
+services:
+  go2rtc:
+    image: alexxit/go2rtc:1.9.13
+    container_name: autoentrada-go2rtc
+    restart: unless-stopped
+    init: true
+    environment:
+      TZ: ${TZ:-America/Mexico_City}
+      GO2RTC_PUBLIC_IP: ${GO2RTC_PUBLIC_IP:?Set GO2RTC_PUBLIC_IP to the media server public IP or DNS}
+    volumes:
+      - ./go2rtc.yaml:/config/go2rtc.yaml:ro
+    # Keep the management/WHEP API private to the machine and backend network.
+    ports:
+      - "127.0.0.1:1984:1984/tcp"
+      # WebRTC media candidates connect directly to go2rtc after WHEP negotiation.
+      - "${GO2RTC_WEBRTC_PORT:-8555}:8555/tcp"
+      - "${GO2RTC_WEBRTC_PORT:-8555}:8555/udp"
+    networks:
+      - media-backplane
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+networks:
+  media-backplane:
+    name: autoentrada-media-backplane
+    driver: bridge
